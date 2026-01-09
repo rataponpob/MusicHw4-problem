@@ -123,6 +123,9 @@ st.title("🎶 Music Playlist App")
 if 'playlist' not in st.session_state:
     st.session_state.playlist = MusicPlaylist()
 
+if 'is_playing' not in st.session_state:
+    st.session_state.is_playing = False
+
 # Create song folder if it doesn't exist
 song_dir = Path(__file__).parent / "song"
 song_dir.mkdir(exist_ok=True)
@@ -150,6 +153,7 @@ with tab1:
                     f.write(uploaded_file.getbuffer())
                 
                 st.session_state.playlist.add_song(title, artist, str(file_path))
+                st.session_state.is_playing = False
             else:
                 st.sidebar.warning("Please enter both title and artist.")
 
@@ -159,6 +163,7 @@ with tab2:
     if st.sidebar.button("Add Song to Playlist", key="add_manual_btn"):
         if new_title and new_artist:
             st.session_state.playlist.add_song(new_title, new_artist)
+            st.session_state.is_playing = False
         else:
             st.sidebar.warning("Please enter both title and artist.")
 
@@ -187,16 +192,16 @@ col1, col2, col3 = st.columns(3)
 with col1:
     if st.button("⏪ Previous", key="prev_btn"):
         st.session_state.playlist.prev_song()
-        st.rerun()
+        st.session_state.is_playing = True
 
 with col2:
     if st.button("▶️ Play Current", key="play_btn"):
-        st.rerun()
+        st.session_state.is_playing = True
 
 with col3:
     if st.button("⏩ Next", key="next_btn"):
         st.session_state.playlist.next_song()
-        st.rerun()
+        st.session_state.is_playing = True
 
 st.markdown("--- 🎶")
 
@@ -204,7 +209,9 @@ st.markdown("--- 🎶")
 if st.session_state.playlist.current_song:
     st.subheader(f"🎵 Now Playing: {st.session_state.playlist.current_song}")
     if st.session_state.playlist.current_song.file_path and Path(st.session_state.playlist.current_song.file_path).exists():
-        st.audio(str(st.session_state.playlist.current_song.file_path))
+        st.audio(str(st.session_state.playlist.current_song.file_path), autoplay=st.session_state.is_playing)
+    else:
+        st.warning("Audio file not found for this song.")
 else:
     st.write("No song selected to play")
 
